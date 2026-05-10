@@ -17,7 +17,7 @@ export function Navbar({ data }: NavbarProps) {
   const pathname = usePathname();
 
   const currentLocale = pathname.startsWith("/de") ? "de" : "en";
-  const logoUrl = data.logo?.asset ? urlFor(data.logo).height(64).url() : null;
+  const logoUrl = data.logo?.asset ? urlFor(data.logo).url() : null;
   const hasMore = (data.moreLinks?.length ?? 0) > 0;
 
   return (
@@ -32,9 +32,9 @@ export function Navbar({ data }: NavbarProps) {
             <Image
               src={logoUrl}
               alt={data.logoText ?? "Bella&Bona"}
-              width={140}
+              width={178}
               height={32}
-              className="h-8 w-auto"
+              style={{ height: "2rem", width: "auto" }}
             />
           ) : (
             <span className="font-black text-xl tracking-tight text-green-900 uppercase">
