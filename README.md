@@ -16,14 +16,12 @@
 ## Sanity Studio
 
 The CMS is structured as two independent documents — one per language — each with a tabbed form so editors don't have to scroll through unrelated fields.
+Some snapshots from Sanity Studio:
+<img width="1905" height="729" alt="image" src="https://github.com/user-attachments/assets/b2b376df-af8a-4064-9644-fd7928f5fff2" />
+<img width="1905" height="788" alt="image" src="https://github.com/user-attachments/assets/ec02c641-7ac0-4171-b3cd-3eca0f3aff6e" />
+<img width="1904" height="772" alt="image" src="https://github.com/user-attachments/assets/411a70f8-df7a-4154-a329-86a30b6f3c7f" />
+<img width="1906" height="804" alt="image" src="https://github.com/user-attachments/assets/c0ede7e7-e32c-4bf0-846b-4b60e7bed203" />
 
-![Studio sidebar showing Homepage — English and Homepage — Deutsch](docs/studio-sidebar.png)
-
-![Studio tabs: SEO, Navbar, Hero, Social Proof, Features, Final CTA, Footer](docs/studio-tabs.png)
-
-![Features section](docs/studio-features.png)
-
-![Footer section](docs/studio-footer.png)
 
 ---
 
