@@ -17,8 +17,15 @@ const navItemFragment = `{
   isExternal
 }`;
 
+// Maps locale to the fixed Sanity document ID for that locale's homepage singleton.
+// EN keeps the original "homepage" ID so existing content is preserved.
+const localeDocId: Record<"en" | "de", string> = {
+  en: "homepage",
+  de: "homepage-de",
+};
+
 export const homepageQuery = groq`
-  *[_type == "homepage"][0] {
+  *[_type == "homepage" && _id == $id][0] {
     seo {
       metaTitle,
       metaDescription,
@@ -39,7 +46,7 @@ export const homepageQuery = groq`
     },
     hero {
       headline,
-      subheadline,
+      subheadline[] { ... },
       ctaLabel,
       ctaHref,
       heroImage ${imageFragment}
@@ -53,26 +60,6 @@ export const homepageQuery = groq`
         url
       }
     },
-    stats {
-      items[] {
-        _key,
-        value,
-        label
-      }
-    },
-    meals {
-      sectionTitle,
-      downloadLabel,
-      downloadHref,
-      meals[] {
-        _key,
-        name,
-        image ${imageFragment},
-        tag,
-        rating,
-        reviewCount
-      }
-    },
     features {
       sectionTitle,
       statCards[] {
@@ -81,66 +68,46 @@ export const homepageQuery = groq`
         label,
         description
       },
-      featureList,
-      appImage ${imageFragment},
-      ctaLabel,
-      ctaHref
-    },
-    steps {
-      heading,
-      steps[] {
+      featureItems[] {
         _key,
-        number,
         title,
-        description,
-        image ${imageFragment}
+        description
       },
-      ctaLabel,
-      ctaHref
-    },
-    testimonials {
-      heading,
-      items[] {
-        _key,
-        quote,
-        author,
-        company,
-        avatar ${imageFragment}
-      }
-    },
-    faq {
-      heading,
-      items[] {
-        _key,
-        question,
-        answer[] { ... }
-      }
+      appImage ${imageFragment}
     },
     finalCta {
       headline,
-      subheadline,
-      contactPersonImage ${imageFragment},
-      contactPersonName,
-      contactPersonTitle,
+      description,
       ctaLabel,
       ctaHref,
-      backgroundImage ${imageFragment}
+      image ${imageFragment}
     },
     footer {
+      followTitle,
+      followDescription,
+      email,
+      socialLinks[] {
+        _key,
+        label,
+        href,
+        icon ${imageFragment}
+      },
+      quickLinksTitle,
       quickLinks[] ${navItemFragment},
+      exploreLinksTitle,
       exploreLinks[] ${navItemFragment},
+      policyLinksTitle,
       policyLinks[] ${navItemFragment},
-      socialLinks[] ${navItemFragment},
+      wordmarkImage ${imageFragment},
       copyrightText
     }
   }
 `;
 
-// Cached fetch function — uses Next.js 16 'use cache' + cacheLife('hours')
-// This is the ISR equivalent: content is cached for ~1 hour, then refreshed.
-export async function getHomepageData(): Promise<HomepageData | null> {
+// ISR via Next.js 16 'use cache' + cacheLife: cached ~1 hour, refreshed on demand via revalidateTag('homepage')
+export async function getHomepageData(locale: "en" | "de" = "en"): Promise<HomepageData | null> {
   "use cache";
   cacheLife("hours");
 
-  return serverClient.fetch<HomepageData>(homepageQuery, {}, { cache: "no-store" });
+  return serverClient.fetch<HomepageData>(homepageQuery, { id: localeDocId[locale] }, { cache: "no-store" });
 }

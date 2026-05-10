@@ -5,8 +5,20 @@ export const heroSectionObject = defineType({
   title: "Hero Section",
   type: "object",
   fields: [
-    defineField({ name: "headline", title: "Headline", type: "string", validation: (r) => r.required() }),
-    defineField({ name: "subheadline", title: "Subheadline", type: "text", rows: 2 }),
+    defineField({
+      name: "headline",
+      title: "Headline",
+      type: "string",
+      initialValue: "Offer Daily Lunch To Build Culture & Cut Costs",
+      validation: (r) => r.required(),
+    }),
+    defineField({
+      name: "subheadline",
+      title: "Subheadline",
+      type: "array",
+      of: [{ type: "block", styles: [{ title: "Normal", value: "normal" }], lists: [] }],
+      description: "Rich text — supports bold/italic for emphasis.",
+    }),
     defineField({ name: "ctaLabel", title: "CTA Button Label", type: "string", initialValue: "Bestellung starten" }),
     defineField({ name: "ctaHref", title: "CTA Button URL", type: "string", initialValue: "#contact" }),
     defineField({

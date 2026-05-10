@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { PortableText } from "@portabletext/react";
 import { urlFor } from "@/lib/sanity/image";
 import type { HeroSection } from "@/types/sanity";
 
@@ -17,16 +18,15 @@ export function Hero({ data }: HeroProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 lg:items-stretch">
 
-          {/* Left card — content */}
           <div className="bg-green-900 rounded-3xl p-8 sm:p-10 lg:p-12 flex flex-col lg:w-[46%]">
             <h1 className="text-lime-200 font-semibold text-4xl sm:text-5xl xl:text-6xl leading-tight">
               {data.headline}
             </h1>
 
-            {data.subheadline && (
-              <p className="mt-6 text-white/80 text-base sm:text-lg leading-relaxed">
-                {data.subheadline}
-              </p>
+            {data.subheadline && data.subheadline.length > 0 && (
+              <div className="mt-6 text-white/80 text-base sm:text-lg leading-relaxed prose prose-invert max-w-none">
+                <PortableText value={data.subheadline} />
+              </div>
             )}
 
             <div className="mt-auto pt-10">
@@ -39,7 +39,6 @@ export function Hero({ data }: HeroProps) {
             </div>
           </div>
 
-          {/* Right — hero image */}
           {heroImageUrl ? (
             <div className="relative flex-1 min-h-70 sm:min-h-95 lg:min-h-120 rounded-3xl overflow-hidden">
               <Image
@@ -54,7 +53,6 @@ export function Hero({ data }: HeroProps) {
               />
             </div>
           ) : (
-            /* Placeholder when no image is set in Sanity yet */
             <div className="flex-1 min-h-70 lg:min-h-120 rounded-3xl bg-cream-100 lg:w-[54%]" />
           )}
 

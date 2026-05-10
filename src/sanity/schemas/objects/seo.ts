@@ -1,6 +1,5 @@
 import { defineField, defineType } from "sanity";
 
-// Reusable SEO object — always kept separate from content fields (green flag)
 export const seoObject = defineType({
   name: "seo",
   title: "SEO",
@@ -11,6 +10,7 @@ export const seoObject = defineType({
       title: "Meta Title",
       type: "string",
       description: "Shown in browser tab and search results. 50–60 characters ideal.",
+      initialValue: "Offer Daily Lunch To Build Culture & Cut Costs | Bella&Bona",
       validation: (r) => r.max(60).warning("Keep under 60 characters for best results"),
     }),
     defineField({
@@ -19,6 +19,7 @@ export const seoObject = defineType({
       type: "text",
       rows: 3,
       description: "Search engine snippet. 140–160 characters ideal.",
+      initialValue: "B2B workplace meal solution in Munich, Berlin & NRW. One contract, one invoice, one dashboard.",
       validation: (r) => r.max(160).warning("Keep under 160 characters"),
     }),
     defineField({

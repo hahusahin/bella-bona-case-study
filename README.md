@@ -1,92 +1,107 @@
 # Bella&Bona — Homepage Case Study
 
-Next.js 16 + Sanity v3 + Vercel · Homepage · June 2025
+Next.js 16 · Sanity v3 · Tailwind CSS v4 · TypeScript · Vercel
 
-## Live
+---
 
-- **Vercel Preview URL**: _add after deployment_
-- **Sanity Studio**: `[preview-url]/studio`
+## Live URLs
 
-## Setup
+| | URL |
+|---|---|
+| **Website** | _add Vercel URL after deployment_ |
+| **Sanity Studio (hosted)** | https://bellabona-casestudy.sanity.studio |
+
+---
+
+## Running locally
 
 ```bash
 pnpm install
-
-# Add .env.local with:
-# NEXT_PUBLIC_SANITY_PROJECT_ID=i8ip3kk3
-# NEXT_PUBLIC_SANITY_DATASET=production
-# SANITY_API_READ_TOKEN=<viewer token from sanity.io/manage>
-# NEXT_PUBLIC_SITE_URL=https://your-vercel-url.vercel.app
-
-pnpm dev
-# open http://localhost:3000/studio → create the Homepage document
-# then http://localhost:3000 to see the rendered page
 ```
+
+Create `.env.local`:
+
+```
+NEXT_PUBLIC_SANITY_PROJECT_ID=i8ip3kk3
+NEXT_PUBLIC_SANITY_DATASET=production
+SANITY_API_READ_TOKEN=<viewer token — sanity.io/manage → API → Tokens>
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+```bash
+pnpm dev
+```
+
+Site → `http://localhost:3000`  
+Local Studio → `http://localhost:3000/studio`
+
+---
+
+## Editing content
+
+Open `http://localhost:3000/studio` while `pnpm dev` is running.
+
+After schema changes, redeploy the hosted Studio:
+
+```bash
+npx sanity deploy
+```
+
+### Sanity Studio
+
+![Studio sidebar showing Homepage — English and Homepage — Deutsch](docs/studio-sidebar.png)
+
+![Studio tabs: SEO, Navbar, Hero, Social Proof, Features, Final CTA, Footer](docs/studio-tabs.png)
+
+![Features section](docs/studio-features.png)
+
+![Footer section](docs/studio-footer.png)
+
+---
 
 ## Key decisions
 
-### Rendering — `cacheLife('hours')` instead of `export const revalidate`
+### Rendering — ISR via `'use cache'` + `cacheLife('hours')`
 
-This project uses **Next.js 16** (the spec said 14+; 16 is a superset). In v16, `cacheComponents: true` replaces route-segment `revalidate` with an explicit `'use cache'` directive and `cacheLife()` profiles. The homepage Sanity fetch is marked `cacheLife('hours')`, which Next.js resolves to:
+Next.js 16 replaces route-segment `export const revalidate` with an explicit `'use cache'` directive and `cacheLife()` profiles. The homepage fetch is marked `cacheLife('hours')`, giving a 1-hour freshness window (stale-while-revalidate) without an SSR hit on every request. On-demand invalidation can be added via a Sanity webhook calling `revalidateTag('homepage')`.
 
-```
-/ Revalidate 1h  Expire 1d
-```
+### Hero image — not animated (LCP protection)
 
-This is ISR — stale-while-revalidate with a 1-hour freshness window. Editorial content (hero copy, section text) rarely changes faster than that, so this avoids an unnecessary SSR hit on every request while keeping content fresh. On-demand revalidation via `revalidateTag('homepage')` can be wired to a Sanity webhook for instant cache busting.
+The `.reveal` entrance animation (`opacity: 0 → 1`) is intentionally absent from the Hero section. Hiding the LCP element behind `opacity: 0` until JS hydration would directly hurt both LCP and CLS. All other sections animate on scroll via a lightweight `IntersectionObserver` (`RevealObserver.tsx`) with zero library weight — pure CSS transitions only.
 
-> If the evaluator is checking for `priority={true}` on the hero image: **`priority` was deprecated in Next.js 16.0** (changelog entry: "priority prop deprecated, preload prop added"). The correct Next.js 16 pattern is `preload={true} fetchPriority="high" loading="eager"`, which is what this implementation uses.
+> The hero image uses `preload={true} fetchPriority="high" loading="eager"` instead of the old `priority` prop, which was deprecated in Next.js 16.0.
 
 ### Sanity schema design
 
-SEO fields (`metaTitle`, `metaDescription`, `ogImage`, `canonicalUrl`, `slug`) live in a **separate `seo` object** within the homepage document — never mixed with content fields. This makes the schema easier for non-developer editors to navigate (SEO concerns are clearly separated from page content).
+- SEO fields (`metaTitle`, `metaDescription`, `ogImage`, `canonicalUrl`) are in a **dedicated `seo` object** — never mixed with content fields, so editors don't have to scroll past technical fields to update copy.
+- Rich-text areas use **Portable Text** so editors can format without touching code.
+- The Studio form uses the **`groups` API** to render as tabs per section (Navbar / Hero / Social Proof / Features / Final CTA / Footer) instead of one long scroll.
 
-All rich-text areas use **Portable Text** (`array of block`), enabling editors to add links, emphasis, and lists without touching code.
-
-### Technical SEO
-
-Added without being asked:
-- **Organization JSON-LD** in root `layout.tsx` — present on every page
-- **LocalBusiness JSON-LD** on the homepage
-- **hreflang tags** for `en`, `de`, and `x-default` (layout.tsx + `generateMetadata` alternates)
-- **canonical URL** driven by Sanity `seo.canonicalUrl` field (with fallback to `NEXT_PUBLIC_SITE_URL`)
-- **robots.txt** disallows `/studio/` and `/api/`
-- **sitemap.xml** dynamically generated; in production this would iterate all Sanity page slugs
-
-### i18n structure
+### i18n — two independent Sanity documents
 
 The brief asks for "English only, but i18n awareness visible in code structure." The approach:
 
-- `src/config/i18n.ts` → `locales = ['en', 'de']`, `defaultLocale = 'en'`
-- `src/locales/en.ts` and `src/locales/de.ts` → same key structure, different values
-- `generateMetadata` adds `alternates.languages` with both `en` and `de` hreflang entries
-- In production: `src/app/[locale]/` routing with `next-intl` drives locale-aware URLs
+- `src/config/i18n.ts` — `locales = ['en', 'de']`, `defaultLocale = 'en'`
+- `src/locales/en.ts` + `src/locales/de.ts` — same key shape, different values
+- **Two Sanity singleton documents** (`homepage` for EN, `homepage-de` for DE) — each editable independently, no field-level i18n complexity
+- `app/de/page.tsx` fetches the DE document (falls back to EN if not populated) so `/de` returns a real page, not a 404
+- `generateMetadata` adds `hreflang` for `en`, `de`, and `x-default`
 
-### Animations
+Production upgrade path: move to `app/[locale]/page.tsx` with `next-intl` middleware.
 
-CSS-only entrance animations (`opacity + translateY` transitions) triggered by a lightweight `IntersectionObserver` (`RevealObserver.tsx`). No GSAP, no Framer Motion — nothing that can block LCP or delay interactivity.
+### Technical SEO (added proactively)
 
-### Performance
+- **Organization + LocalBusiness JSON-LD** structured data
+- **hreflang** in both `layout.tsx` and `generateMetadata`
+- **Canonical URL** driven by Sanity `seo.canonicalUrl`
+- **`robots.txt`** disallows `/studio/`
+- **`sitemap.xml`** dynamically generated
 
-- Hero image: `preload={true} fetchPriority="high" loading="eager"` (LCP element)
-- All other images: lazy (default) with explicit `width`/`height` or `fill + sizes`
-- Fonts: Figtree + DM Sans via `next/font/google` with `display: swap`
-- Tailwind CSS v4: CSS-first config, no runtime JS
+---
 
-## What I'd do differently with more time
+## What I'd add with more time
 
-1. **Sanity webhook → `revalidateTag('homepage')`** for on-demand cache invalidation — content changes would reflect in under a second instead of waiting up to 1 hour
-2. **`/[locale]/` routing** with `next-intl` for proper DE/EN URL structure (`/de/`, `/en/`)
-3. **Sanity Live Preview** with `@sanity/preview-kit` so editors see changes before publishing
-4. **Image pipeline**: export Figma assets directly into Sanity via API instead of manual upload
-5. **`@sanity/vision`** GROQ query explorer already included in the Studio build for debugging
-
-## Stack versions
-
-| Package | Version | Note |
-|---------|---------|------|
-| Next.js | 16.2.6 | Brief said "14+"; 16 is fully compatible and recommended |
-| React | 19.2.4 | |
-| Sanity | v3 | |
-| Tailwind CSS | 4.3.0 | v4: CSS-first, no tailwind.config.js |
-| TypeScript | 5.9.3 | strict mode |
+1. **Sanity webhook → `revalidateTag('homepage')`** — published changes reflect instantly instead of waiting up to 1 hour
+2. **`next-intl` middleware** for proper `/en/` and `/de/` URL routing
+3. **Sanity Live Preview** so editors see unpublished changes in real time
+4. **Vercel Analytics** for real Core Web Vitals against the deployed URL

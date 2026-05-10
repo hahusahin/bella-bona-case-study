@@ -10,65 +10,45 @@ interface FinalCTAProps {
 export function FinalCTA({ data }: FinalCTAProps) {
   if (!data) return null;
 
-  const personImageUrl = data.contactPersonImage?.asset
-    ? urlFor(data.contactPersonImage).width(120).height(120).fit("crop").url()
+  const imageUrl = data.image?.asset
+    ? urlFor(data.image).width(600).height(400).fit("crop").url()
     : null;
 
   return (
-    <section className="bg-lime-50 py-16 md:py-24" aria-label="Contact and call to action">
+    <section className="pb-12 md:pb-16" aria-label="Support and resources">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+        <div className="reveal flex flex-col md:flex-row items-center gap-8 md:gap-12 bg-lime-50 rounded-3xl px-8 py-10 md:px-12 md:py-14">
 
-          {/* Left — green card with contact info */}
-          <div className="bg-green-900 rounded-3xl p-8 md:p-12 flex flex-col lg:w-[42%]">
-            <h2 className="text-3xl md:text-4xl font-semibold text-lime-200 leading-tight mb-4">
+          <div className="flex-1">
+            <h2 className="text-2xl md:text-3xl font-bold text-green-900 leading-tight mb-4">
               {data.headline}
             </h2>
-            {data.subheadline && (
-              <p className="text-white/80 text-base leading-relaxed mb-8">
-                {data.subheadline}
+            {data.description && (
+              <p className="text-text-primary text-base leading-relaxed mb-8 max-w-md">
+                {data.description}
               </p>
             )}
-
-            {/* Contact person */}
-            {(personImageUrl || data.contactPersonName) && (
-              <div className="mt-auto flex items-center gap-4">
-                {personImageUrl && (
-                  <Image
-                    src={personImageUrl}
-                    alt={data.contactPersonName ?? "Contact person"}
-                    width={56}
-                    height={56}
-                    className="rounded-full object-cover w-14 h-14 shrink-0"
-                  />
-                )}
-                {data.contactPersonName && (
-                  <div>
-                    <p className="font-semibold text-white text-sm">{data.contactPersonName}</p>
-                    {data.contactPersonTitle && (
-                      <p className="text-white/70 text-xs mt-0.5">{data.contactPersonTitle}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Right — CTA / booking */}
-          <div className="flex-1 bg-white rounded-3xl p-8 md:p-12 flex flex-col justify-center">
-            <h3 className="text-xl md:text-2xl font-semibold text-text-primary mb-3">
-              Schedule a free appointment
-            </h3>
-            <p className="text-separator text-base mb-8 leading-relaxed">
-              Pick a time that works for you and we&apos;ll walk you through how Bella&amp;Bona works for your team.
-            </p>
             <Link
-              href={data.ctaHref ?? "#contact"}
-              className="self-start inline-flex items-center px-8 py-4 rounded-full bg-green-900 text-white font-medium text-base hover:bg-green-800 transition-colors"
+              href={data.ctaHref}
+              className="inline-flex items-center px-6 py-3 rounded-full bg-green-900 text-white font-medium text-sm hover:bg-green-800 transition-colors"
             >
               {data.ctaLabel}
             </Link>
           </div>
+
+          {imageUrl && (
+            <div className="flex-1 flex justify-end">
+              <div className="relative w-full max-w-sm h-56 md:h-72 rounded-2xl overflow-hidden">
+                <Image
+                  src={imageUrl}
+                  alt={data.image?.alt ?? "Bella&Bona meals"}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                  className="object-cover"
+                />
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

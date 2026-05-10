@@ -28,7 +28,6 @@ export const metadata: Metadata = {
   description:
     "B2B workplace meal solution in Munich, Berlin & NRW. One contract, one invoice, one dashboard.",
   robots: { index: true, follow: true },
-  // hreflang is set per page via generateMetadata alternates.languages
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -40,13 +39,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${figtree.variable} ${dmSans.variable} h-full`}
     >
       <head>
-        {/* hreflang for DE/EN multilingual awareness — full /[locale]/ routing
-            would be added in the production build with next-intl */}
+        {/* hreflang — page-level generateMetadata also emits these; the <link> tags here
+            serve as a fallback for any page that doesn't call generateMetadata */}
         <link rel="alternate" hrefLang="en" href={`${siteUrl}/`} />
         <link rel="alternate" hrefLang="de" href={`${siteUrl}/de/`} />
         <link rel="alternate" hrefLang="x-default" href={`${siteUrl}/`} />
 
-        {/* Organization JSON-LD — present on every page */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}

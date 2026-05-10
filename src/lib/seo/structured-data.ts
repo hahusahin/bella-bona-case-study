@@ -1,7 +1,3 @@
-// JSON-LD structured data builders
-// Organization schema is added to every page via root layout.tsx
-// LocalBusiness schema is added to the homepage.
-
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bellabona.com";
 
 export function buildOrganizationSchema() {

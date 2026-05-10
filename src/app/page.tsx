@@ -7,21 +7,14 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/sections/Hero";
 import { SocialProof } from "@/components/sections/SocialProof";
-import { Stats } from "@/components/sections/Stats";
-import { Meals } from "@/components/sections/Meals";
 import { Features } from "@/components/sections/Features";
-import { Steps } from "@/components/sections/Steps";
-import { Testimonials } from "@/components/sections/Testimonials";
-import { FAQ } from "@/components/sections/FAQ";
 import { FinalCTA } from "@/components/sections/FinalCTA";
 import { RevealObserver } from "@/components/ui/RevealObserver";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bellabona.com";
 
-// generateMetadata runs at build/revalidation time — all SEO fields come from Sanity.
-// params is a Promise in Next.js 15+ (breaking change from 14).
 export async function generateMetadata(): Promise<Metadata> {
-  const data = await getHomepageData();
+  const data = await getHomepageData("en");
   const seo = data?.seo;
 
   const ogImageUrl = seo?.ogImage?.asset
@@ -37,8 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
       "B2B workplace meal solution in Munich, Berlin & NRW. One contract, one invoice, one dashboard.",
     alternates: {
       canonical: canonicalUrl,
-      // hreflang — DE/EN bilingual structure, English only for this test.
-      // In production: /[locale]/ routing drives this dynamically.
+      // hreflang — bilingual DE/EN structure. In production: /[locale]/ routing via next-intl drives this dynamically.
       languages: {
         en: `${siteUrl}/`,
         de: `${siteUrl}/de/`,
@@ -63,10 +55,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const data = await getHomepageData();
+  const data = await getHomepageData("en");
   const localBusinessSchema = buildLocalBusinessSchema();
 
-  // Graceful empty state while Sanity content is being set up
   if (!data) {
     return (
       <main className="flex items-center justify-center min-h-screen bg-green-900">
@@ -83,13 +74,12 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* LocalBusiness JSON-LD — homepage only */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
       />
 
-      {/* Intersection-observer for .reveal CSS entrance animations (no JS library) */}
+      {/* Lightweight IntersectionObserver — adds .visible to .reveal elements for CSS entrance animations */}
       <RevealObserver />
 
       <Navbar data={data.navbar} />
@@ -97,12 +87,7 @@ export default async function HomePage() {
       <main id="main-content">
         <Hero data={data.hero} />
         <SocialProof data={data.logoBar} />
-        <Stats data={data.stats} />
-        {data.meals && <Meals data={data.meals} />}
         <Features data={data.features} />
-        <Steps data={data.steps} />
-        {data.testimonials && <Testimonials data={data.testimonials} />}
-        {data.faq && <FAQ data={data.faq} />}
         <FinalCTA data={data.finalCta} />
       </main>
 

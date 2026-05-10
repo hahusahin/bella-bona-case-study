@@ -19,12 +19,22 @@ export const sanityConfig = defineConfig({
           .title("Content")
           .items([
             S.listItem()
-              .title("Homepage")
-              .id("homepage")
+              .title("Homepage — English")
               .child(
                 S.document()
                   .schemaType("homepage")
                   .documentId("homepage")
+                  .title("Homepage (EN)")
+                  .views([S.view.form()])
+              ),
+            S.listItem()
+              .title("Homepage — Deutsch")
+              .child(
+                S.document()
+                  .schemaType("homepage")
+                  .documentId("homepage-de")
+                  .title("Homepage (DE)")
+                  .views([S.view.form()])
               ),
           ]),
     }),

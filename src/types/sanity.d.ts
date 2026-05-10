@@ -15,6 +15,13 @@ export interface NavItem {
   isExternal?: boolean;
 }
 
+export interface SocialLink {
+  _key: string;
+  label: string;
+  href: string;
+  icon?: SanityImage;
+}
+
 export interface SeoData {
   metaTitle: string;
   metaDescription: string;
@@ -25,10 +32,9 @@ export interface SeoData {
 
 export interface HeroSection {
   headline: string;
-  subheadline: string;
+  subheadline?: PortableTextBlock[];
   ctaLabel: string;
   ctaHref: string;
-  backgroundImage?: SanityImage;
   heroImage?: SanityImage;
 }
 
@@ -44,32 +50,6 @@ export interface LogoBarSection {
   logos: LogoItem[];
 }
 
-export interface StatItem {
-  _key: string;
-  value: string;
-  label: string;
-}
-
-export interface StatsSection {
-  items: StatItem[];
-}
-
-export interface MealItem {
-  _key: string;
-  name: string;
-  image?: SanityImage;
-  tag?: string;
-  rating?: string;
-  reviewCount?: string;
-}
-
-export interface MealsSection {
-  sectionTitle?: string;
-  downloadLabel?: string;
-  downloadHref?: string;
-  meals?: MealItem[];
-}
-
 export interface StatCard {
   _key: string;
   value: string;
@@ -77,71 +57,39 @@ export interface StatCard {
   description?: string;
 }
 
+export interface FeatureItem {
+  _key: string;
+  title: string;
+  description?: string;
+}
+
 export interface FeaturesSection {
   sectionTitle?: string;
   statCards?: StatCard[];
-  featureList?: string[];
+  featureItems?: FeatureItem[];
   appImage?: SanityImage;
-  ctaLabel?: string;
-  ctaHref?: string;
-}
-
-export interface StepItem {
-  _key: string;
-  number: string;
-  title: string;
-  description: string;
-  image?: SanityImage;
-  ctaLabel?: string;
-  ctaHref?: string;
-}
-
-export interface StepsSection {
-  heading: string;
-  steps: StepItem[];
-  ctaLabel: string;
-  ctaHref: string;
-}
-
-export interface TestimonialItem {
-  _key: string;
-  quote: string;
-  author: string;
-  company?: string;
-  avatar?: SanityImage;
-}
-
-export interface TestimonialsSection {
-  heading: string;
-  items: TestimonialItem[];
-}
-
-export interface FaqItem {
-  _key: string;
-  question: string;
-  answer: PortableTextBlock[];
-}
-
-export interface FaqSection {
-  heading: string;
-  items: FaqItem[];
 }
 
 export interface CtaSection {
   headline: string;
-  subheadline?: string;
-  contactPersonImage?: SanityImage;
-  contactPersonName?: string;
-  contactPersonTitle?: string;
+  description?: string;
   ctaLabel: string;
   ctaHref: string;
+  image?: SanityImage;
 }
 
 export interface FooterData {
+  followTitle?: string;
+  followDescription?: string;
+  email?: string;
+  socialLinks?: SocialLink[];
+  quickLinksTitle?: string;
   quickLinks: NavItem[];
+  exploreLinksTitle?: string;
   exploreLinks: NavItem[];
+  policyLinksTitle?: string;
   policyLinks: NavItem[];
-  socialLinks: NavItem[];
+  wordmarkImage?: SanityImage;
   copyrightText: string;
 }
 
@@ -162,12 +110,7 @@ export interface HomepageData {
   navbar: NavbarData;
   hero: HeroSection;
   logoBar: LogoBarSection;
-  stats: StatsSection;
-  meals?: MealsSection;
   features: FeaturesSection;
-  steps: StepsSection;
-  testimonials?: TestimonialsSection;
-  faq?: FaqSection;
   finalCta: CtaSection;
   footer: FooterData;
 }
