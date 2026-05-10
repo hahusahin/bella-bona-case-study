@@ -1,65 +1,112 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { getHomepageData } from "@/lib/sanity/queries";
+import { buildLocalBusinessSchema } from "@/lib/seo/structured-data";
+import { urlFor } from "@/lib/sanity/image";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { Hero } from "@/components/sections/Hero";
+import { SocialProof } from "@/components/sections/SocialProof";
+import { Stats } from "@/components/sections/Stats";
+import { Meals } from "@/components/sections/Meals";
+import { Features } from "@/components/sections/Features";
+import { Steps } from "@/components/sections/Steps";
+import { Testimonials } from "@/components/sections/Testimonials";
+import { FAQ } from "@/components/sections/FAQ";
+import { FinalCTA } from "@/components/sections/FinalCTA";
+import { RevealObserver } from "@/components/ui/RevealObserver";
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bellabona.com";
+
+// generateMetadata runs at build/revalidation time — all SEO fields come from Sanity.
+// params is a Promise in Next.js 15+ (breaking change from 14).
+export async function generateMetadata(): Promise<Metadata> {
+  const data = await getHomepageData();
+  const seo = data?.seo;
+
+  const ogImageUrl = seo?.ogImage?.asset
+    ? urlFor(seo.ogImage).width(1200).height(630).fit("crop").url()
+    : `${siteUrl}/og-default.png`;
+
+  const canonicalUrl = seo?.canonicalUrl ?? `${siteUrl}/`;
+
+  return {
+    title: seo?.metaTitle ?? "Bella&Bona — Smart Team Lunches for Modern Offices",
+    description:
+      seo?.metaDescription ??
+      "B2B workplace meal solution in Munich, Berlin & NRW. One contract, one invoice, one dashboard.",
+    alternates: {
+      canonical: canonicalUrl,
+      // hreflang — DE/EN bilingual structure, English only for this test.
+      // In production: /[locale]/ routing drives this dynamically.
+      languages: {
+        en: `${siteUrl}/`,
+        de: `${siteUrl}/de/`,
+        "x-default": `${siteUrl}/`,
+      },
+    },
+    openGraph: {
+      type: "website",
+      url: canonicalUrl,
+      title: seo?.metaTitle ?? "Bella&Bona",
+      description: seo?.metaDescription,
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: "Bella&Bona" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seo?.metaTitle ?? "Bella&Bona",
+      description: seo?.metaDescription,
+      images: [ogImageUrl],
+    },
+    robots: { index: true, follow: true },
+  };
+}
+
+export default async function HomePage() {
+  const data = await getHomepageData();
+  const localBusinessSchema = buildLocalBusinessSchema();
+
+  // Graceful empty state while Sanity content is being set up
+  if (!data) {
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-green-900">
+        <p className="text-white text-lg">
+          Setting up content… Open{" "}
+          <Link href="/studio" className="underline text-lime-200">
+            /studio
+          </Link>{" "}
+          to add your homepage data.
+        </p>
       </main>
-    </div>
+    );
+  }
+
+  return (
+    <>
+      {/* LocalBusiness JSON-LD — homepage only */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+      />
+
+      {/* Intersection-observer for .reveal CSS entrance animations (no JS library) */}
+      <RevealObserver />
+
+      <Navbar data={data.navbar} />
+
+      <main id="main-content">
+        <Hero data={data.hero} />
+        <SocialProof data={data.logoBar} />
+        <Stats data={data.stats} />
+        {data.meals && <Meals data={data.meals} />}
+        <Features data={data.features} />
+        <Steps data={data.steps} />
+        {data.testimonials && <Testimonials data={data.testimonials} />}
+        {data.faq && <FAQ data={data.faq} />}
+        <FinalCTA data={data.finalCta} />
+      </main>
+
+      <Footer data={data.footer} />
+    </>
   );
 }
