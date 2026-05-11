@@ -9,62 +9,71 @@
 | **Website** | https://bella-bona-case-study.vercel.app |
 | **Sanity Studio** | https://bellabona-casestudy.sanity.studio |
 
-> The project requires Sanity credentials to run locally. Content is fetched from a private Sanity dataset — there is no way to run the site without a project API token.
+> Sanity Studio link requires my Sanity credentials to run locally — content is fetched from a private dataset, so there's no way to run it without my API token.
 
 ---
 
 ## Key decisions
 
-### Rendering — page is cached and auto-refreshed every hour
+### Rendering strategy
 
-The homepage is cached at the CDN level and automatically re-fetched from Sanity every hour. This means the server doesn't rebuild the page on every visitor request, keeping it fast — while still picking up any content changes within an hour.
+I didn't want the server to hit Sanity on every page request — that would be slow. But I also didn't want a fully static page that never picks up content changes. The middle ground is ISR (Incremental Static Regeneration): the page is built once, cached, after 1 hour, the cache refreshes in the background. Visitors never wait for a rebuild, and content changes are live within the hour.
 
-This uses Next.js 16's `'use cache'` + `cacheLife('hours')` instead of the older `export const revalidate` pattern, which was removed in v16. A Sanity webhook can be wired to `revalidateTag('homepage')` to flush the cache instantly on every publish.
+In previous Next.js versions you'd do this by writing `export const revalidate = 3600` at the top of a page file. Next.js 16 removed that approach and replaced it with explicitly marking the data-fetching function with `'use cache'` and `cacheLife('hours')`. 
 
-### Animations — scroll-triggered, CSS only, zero JS library
+### React Server Components
 
-As visitors scroll down the page, each section fades in and slides up. This is implemented with a single small component (`RevealObserver.tsx`) that uses the browser's built-in `IntersectionObserver` API to watch for elements entering the viewport, then adds a `.visible` CSS class to trigger the transition. All motion is plain CSS — no animation library, no impact on page load time.
+I kept almost every component as "server component" which Next.js renders a component by default. The only components that run in the browser are the ones that need it: the Navbar (mobile menu state, active locale detection) and the scroll animation observer. Everything else is zero client-side JavaScript, which keeps the bundle small and the page visible before any scripts run.
 
-The hero section is intentionally excluded from this animation. It is the first thing visitors see (and the browser's LCP element), so it renders immediately at full opacity without waiting for any JavaScript.
+### Animations
 
-> The hero image uses `preload={true} fetchPriority="high" loading="eager"` — the correct Next.js 16 pattern. The old `priority` prop was deprecated in v16.0.
+Sections below the fold fade in and slide up as you scroll. No animation library — pure CSS transitions, so there's no impact on page load time.
 
-### Sanity schema design
+The hero section is left out of this intentionally. It's the first thing visitors see and the browser's LCP element, so it renders immediately at full opacity. Hiding it behind an animation would hurt the LCP score.
 
-- **SEO fields in a separate object** — `metaTitle`, `metaDescription`, `ogImage`, and `canonicalUrl` live in a dedicated `seo` group so content editors never accidentally scroll past them while updating page copy.
-- **Portable Text for rich text** — editors can add bold, italic, and links without touching code.
-- **Tabbed Studio form** — the document uses Sanity's `groups` API to split fields into tabs per section (Navbar / Hero / Social Proof / Features / Final CTA / Footer) instead of one long page.
+### Content management — Sanity setup and Studio placement
 
-### i18n — two independent documents, one per language
+Sanity offers a few options for where the editing interface lives: a standalone Studio deployed to a separate URL (`yourproject.sanity.studio`), a fully self-hosted setup, or embedded directly inside the Next.js app. I went with embedded — the Studio runs at `/studio` within the same codebase, so there's one repo and one deployment to manage.
 
-The brief asked for "English only, but i18n awareness visible in code structure."
+The downside is that Studio code ships with the production build. I handled that by blocking `/studio` in production with middleware, so it's not accessible from the live site. I also deployed a separate hosted Studio that enables editing content from sanity.io website.
 
-- `src/config/i18n.ts` defines `locales = ['en', 'de']` and `defaultLocale = 'en'`
-- `src/locales/en.ts` and `src/locales/de.ts` hold UI strings with the same key shape
-- Two separate Sanity documents (`homepage` for EN, `homepage-de` for DE) — each edited independently, no shared fields that could accidentally overwrite the other language
-- `/de` renders the German document and falls back to English if no German content is published yet
-- `generateMetadata` outputs `hreflang` tags for `en`, `de`, and `x-default`
+### Internationalization (i18n)
 
-The production upgrade path is to move to `app/[locale]/page.tsx` routing with `next-intl` middleware, which would handle locale detection, redirects, and URL structure (`/en/`, `/de/`) automatically.
+The brief asked for English-only with visible i18n structure. I set up locale config, added hreflang tags, and built a `/de` route that fetches from a separate German Sanity document.
+
+For the CMS I chose two completely separate documents — one for EN, one for DE — rather than mixing both languages into shared fields. Whoever manages German content works in their own document with no risk of overwriting English. The downside is that shared assets like logos get duplicated. The logical next step would be `next-intl` for proper URL-based routing (`/en/`, `/de/`) with automatic browser language detection.
 
 ### Technical SEO
 
-Added without being asked:
+Added:
 
-- **Organization + LocalBusiness JSON-LD** structured data on every page
-- **hreflang** declared in both the root layout and `generateMetadata`
-- **Canonical URL** pulled from Sanity `seo.canonicalUrl`
-- **`robots.txt`** that disallows `/studio/`
-- **`sitemap.xml`** dynamically generated from `app/sitemap.ts`
+- **Organization + LocalBusiness JSON-LD** structured data
+- **hreflang** for `en`, `de`, and `x-default`
+- **Canonical URL** configurable from Sanity
+- **robots.txt** blocking `/studio/`
+- **sitemap.xml** dynamically generated
+
+---
+
+## What I'd do differently
+
+**Instant cache clearing on publish.** Currently a content change in Sanity takes up to an hour to appear on the site. That's fine for most things, but for time-sensitive updates it's not ideal. A Sanity webhook which revalidates the page on every publish would reflect the content update instantly.
+
+**Proper i18n with next-intl.** The content is translated through Sanity, but UI strings like aria-labels and button text are still hardcoded in English. I'd add `next-intl` to handle those, plus automatic browser language detection and proper `/en/` and `/de/` URL prefixes.
+
+**Finish the full design.** The Figma has more detail than what I implemented. I focused on getting the architecture right, but given more time I'd finish all the design sections. 
+
+**Fill in the German content.** The DE Sanity document and the `/de` route both work, but the fields are still empty as I didn't want to spend much time on it.
 
 ---
 
 ## Sanity Studio
 
-The CMS is structured as two independent documents — one per language — each with a tabbed form so editors don't have to scroll through unrelated fields.
-Some snapshots from Sanity Studio:
+The CMS has two independent documents — one per language — each with a tabbed form split by page section.
+
+Some snapshots from Sanity Studio (as you do not have access to it):
+
 <img width="1905" height="729" alt="image" src="https://github.com/user-attachments/assets/b2b376df-af8a-4064-9644-fd7928f5fff2" />
 <img width="1905" height="788" alt="image" src="https://github.com/user-attachments/assets/ec02c641-7ac0-4171-b3cd-3eca0f3aff6e" />
 <img width="1904" height="772" alt="image" src="https://github.com/user-attachments/assets/411a70f8-df7a-4154-a329-86a30b6f3c7f" />
 <img width="1906" height="804" alt="image" src="https://github.com/user-attachments/assets/c0ede7e7-e32c-4bf0-846b-4b60e7bed203" />
-

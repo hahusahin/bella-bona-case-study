@@ -37,7 +37,7 @@ export function FinalCTA({ data }: FinalCTAProps) {
           </div>
 
           {imageUrl && (
-            <div className="flex-1 flex justify-end">
+            <div className="w-full flex-1 flex justify-end">
               <div className="relative w-full max-w-sm h-56 md:h-72 rounded-2xl overflow-hidden">
                 <Image
                   src={imageUrl}

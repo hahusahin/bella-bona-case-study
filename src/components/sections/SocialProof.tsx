@@ -15,7 +15,7 @@ export function SocialProof({ data }: SocialProofProps) {
       <div className="flex justify-center mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center gap-x-10 gap-y-4">
           {/* Heading — left anchor of the row */}
-          <p className="reveal shrink-0 text-4xl text-text-primary">
+          <p className="reveal md:shrink-0 text-3xl md:text-4xl text-text-primary">
             {data.heading}
           </p>
 

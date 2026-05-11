@@ -42,7 +42,7 @@ export function Features({ data }: FeaturesProps) {
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {data.sectionTitle && (
-          <h2 className="reveal mx-auto text-2xl md:text-4xl font-semibold text-text-primary mb-10 max-w-3xl">
+          <h2 className="reveal mx-auto text-2xl md:text-4xl font-semibold text-text-primary text-center mb-10 max-w-3xl">
             {data.sectionTitle}
           </h2>
         )}
